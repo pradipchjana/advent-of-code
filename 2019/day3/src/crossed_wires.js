@@ -4,17 +4,17 @@ const offsets = {
   "R": { dx: 0, dy: 1 },
   "L": { dx: 0, dy: -1 },
   "U": { dx: 1, dy: 0 },
-  "D": { dx: -1,dy: 0 },
+  "D": { dx: -1, dy: 0 },
 };
 
 export const findCoordinates = (length, coordinateInfo, { dx, dy }) => {
   let x = coordinateInfo.x;
   let y = coordinateInfo.y;
-  
+
   for (let index = 0; index < length; index++) {
     y = y + dy;
     x = x + dx;
- 
+
     coordinateInfo.coordinates.push([x, y]);
   }
 
@@ -27,14 +27,15 @@ export const findCoordinates = (length, coordinateInfo, { dx, dy }) => {
 const executeInstruction = (coordinateInfo, instruction) => {
   const offset = offsets[instruction[0]];
   const length = parseInt(instruction.slice(1));
-  
+
   return findCoordinates(length, coordinateInfo, offset);
 };
 
 export const executeInstructions = (instructions) => {
   const allPoints = instructions.split(",").reduce(executeInstruction, {
     coordinates: [],
-     x: 0, y: 0 ,
+    x: 0,
+    y: 0,
   });
   return allPoints.coordinates;
 };
@@ -51,17 +52,40 @@ function areEqual(array1, array2) {
   return true;
 }
 
-export const findIntersections = (wire1, wire2) => {
+export const findIntersections = (wire1Points, wire2Points) => {
+  const intersectPoints = wire1Points.filter((point) =>
+    wire2Points.some((ele) => areEqual(ele, point))
+  );
+  return intersectPoints;
+};
+
+export const findManhatanDistance = (wire1Points, wire2Points) => {
+  const instructionPoints = findIntersections(wire1Points, wire2Points);
+  const distanceOfIntersection = instructionPoints.map((point) =>
+    Math.abs(point[0]) + Math.abs(point[1])
+  );
+  const smallestDistance = distanceOfIntersection.reduce(
+    (lowest, distance) => lowest > distance ? distance : lowest,
+    Infinity,
+  );
+  return instructionPoints[distanceOfIntersection.indexOf(smallestDistance)];
+};
+
+const findIndex = (array, [x, y]) => {
+  for (let index = 0; index < array.length; index++) {
+    if (array[index][0] === x && array[index][1] === y) {
+      return index + 1;
+    }
+  }
+};
+
+export const findTotalSteps = (wire1, wire2) => {
   const wire1Points = executeInstructions(wire1);
   const wire2Points = executeInstructions(wire2);
-  
-  const intersectPoints = wire1Points.filter(point => wire2Points.some(ele => areEqual(ele,point)));
-  return intersectPoints;
-}
 
-export const findManhatanDistance = (wire1, wire2) => {
-  const instructionPoints = findIntersections(wire1, wire2);
-  const distanceOfIntersection = instructionPoints.map(point => Math.abs(point[0]) + Math.abs(point[1]));
-  return distanceOfIntersection.sort((a,b)=>a - b).at(0);
-}
-
+  const intersections = findIntersections(wire1Points, wire2Points);
+  const allSteps = intersections.map((ele) =>
+    findIndex(wire1Points, ele) + findIndex(wire2Points, ele)
+  );
+  return allSteps.sort((a, b) => a - b).at(0);
+};
