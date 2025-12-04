@@ -2,16 +2,21 @@ const add = (operand1, operand2) => operand1 + operand2;
 const mul = (multiplier, multiplicand) => multiplicand * multiplier;
 const jumpIfTrue = (value) => value !== 0;
 const jumpIfFalse = (value) => value === 0;
+const equalTo = (value1, value2) => value1 === value2 ? 1: 0;
+const lessThan = (value1, value2) => value1 < value2 ? 1: 0;
 
 const operations = {
   1: add,
   2: mul,
+    7: lessThan,
+  8:equalTo
 };
 
 const jumps = {
   5: jumpIfTrue,
   6: jumpIfFalse,
 };
+
 
 const positionMode = (instructions, index) => instructions[index];
 
@@ -31,7 +36,32 @@ export const parseInput = (input) => {
   return input.split(",").map(Number);
 };
 
-export const intcode = (input) => {
+const doOperation = (
+  opcode,
+  modeOfAnswerIndex,
+  instructions,
+  index,
+  modeOfOperand1,
+  modeOfOperand2,
+) => {
+  const operand1 = valueOfOperand(modeOfOperand1, instructions, index + 1);
+  const operand2 = valueOfOperand(modeOfOperand2, instructions, index + 2);
+  const operation = operations[opcode];
+  
+  const answerIndex = parameterMode[modeOfAnswerIndex](
+    instructions,
+    index + 3,
+  );
+  instructions[answerIndex] = operation(operand1, operand2);
+};
+
+const jumpLocation = (opcode, instructions, index,mode) => { 
+  const isTrue = jumps[opcode](instructions[index + 1]);
+  const jumpIndex = parameterMode[mode](instructions, index + 2);
+  return isTrue ? jumpIndex : index + 3 ;
+}
+
+export const intcode = (input, id) => {
   let index = 0;
   const instructions = parseInput(input);
 
@@ -43,14 +73,15 @@ export const intcode = (input) => {
     const modeOfAnswerIndex = padInstruction[0];
 
     if (opcode in operations) {
-      const operand1 = valueOfOperand(modeOfOperand1, instructions, index + 1);
-      const operand2 = valueOfOperand(modeOfOperand2, instructions, index + 2);
-      const operation = operations[opcode];
-      const answerIndex = parameterMode[modeOfAnswerIndex](
+      doOperation(
+        opcode,
+        modeOfAnswerIndex,
         instructions,
-        index + 3,
+        index,
+        modeOfOperand1,
+        modeOfOperand2,
       );
-      instructions[answerIndex] = operation(operand1, operand2);
+      
       index = index + 3;
     }
 
@@ -59,8 +90,14 @@ export const intcode = (input) => {
         instructions,
         index + 1,
       );
-      instructions[answerIndex] = 1;
+      instructions[answerIndex] = id;
       index = index + 1;
+    }
+
+    if (opcode in jumps) {
+      index = jumpLocation(opcode, instructions, index, modeOfOperand1) - 1;
+      console.log(index);
+      
     }
 
     if (opcode === 4) {
@@ -78,5 +115,5 @@ export const intcode = (input) => {
   return instructions;
 };
 
-const input = Deno.readTextFileSync("./data.txt");
-intcode(input);
+
+console.log(intcode("3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99",8));
