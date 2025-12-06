@@ -3,7 +3,7 @@ const multiply = (a, b) => a * b;
 const equals = (a, b) => (a === b ? 1 : 0);
 const lessThan = (a, b) => (a < b ? 1 : 0);
 const jumpIfTrue = (value) => value !== 0;
-const jumpIfFalse = (value) => value !== 0;
+const jumpIfFalse = (value) => value === 0;
 
 const operations = {
   1: add,

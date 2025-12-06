@@ -1,13 +1,11 @@
-import { assertEquals } from "@std/assert/equals";
 import { permutations } from "@std/collections/permutations";
-import { executeInputs } from "../day2/src/1202_program_alarm.js";
 
 const add = (a, b) => a + b;
 const multiply = (a, b) => a * b;
 const equals = (a, b) => (a === b ? 1 : 0);
 const lessThan = (a, b) => (a < b ? 1 : 0);
 const jumpIfTrue = (value) => value !== 0;
-const jumpIfFalse = (value) => value !== 0;
+const jumpIfFalse = (value) => value === 0;
 
 const operations = {
   1: add,
@@ -55,8 +53,6 @@ const executeJump = (opcode, memory, instructionPointer, mode1, mode2) => {
 
 export const intcode = (machine, systemInput) => {
   let { memory, pointer, halted } = machine;
-  let inputIndex = 0;
-  let output = 0;
 
   while (!halted) {
     const instruction = String(memory[pointer]).padStart(5, "0");
@@ -99,15 +95,6 @@ export const intcode = (machine, systemInput) => {
   return {output:null,halted:machine.halted};
 };
 
-// const part1 = (input ,range) => {
-//   const allPosibility = permutations(range);
-//  const allSignals =  allPosibility.map(trusters => trusters.reduce((inputSecond, phase) => {
-//    inputSecond = intcode(input, [phase, inputSecond]);    
-//     return inputSecond;
-//  },0))
-//   return allSignals.sort((a, b) =>b-a).at(0);
-// }
-
 const createMachine = (input) =>
 ({
     memory: parseInput(input),
@@ -120,18 +107,16 @@ const main = (input, range) => {
   let maxSignal = 0;
   for (const phases of perms) {
     const amps = [0, 1, 2, 3, 4].map(() => createMachine(input));
-    phases.forEach((phase, i) => intcode(amps[i], [phase]));
+    phases.forEach((phase, index) => intcode(amps[index], [phase]));
     let signal = 0;
     let halted = false;
     while (!halted) {
       for (let i = 0; i < 5; i++) {
         const res = intcode(amps[i], [signal]);
-        if (res.output !== null) {
+        if (res.output !== null)
           signal = res.output;
-        }
-        if (amps[4].halted) {
+        if (amps[4].halted)
           halted = true;
-        }
       }
     }
     maxSignal = Math.max(maxSignal, signal);
