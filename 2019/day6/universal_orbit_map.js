@@ -1,4 +1,3 @@
-import { findIntersections } from "../day3/src/crossed_wires.js";
 import { intersect } from "@std/collections";
 
 const parseOrbitsData = input => {
